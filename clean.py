@@ -31,24 +31,28 @@ def get_name_column(headers):
 
 def read_csv(file_path):
     data = {}
-    print(f"Opening file: {file_path}")
-    
     delimiter = get_delimiter(file_path)
     
-    with open(file_path, 'r') as file:
-        for row_num, line in enumerate(file, 1):
-            parts = line.strip().split(delimiter)
-            if len(parts) >= 3:
-                url, identifier, password = [part.strip() for part in parts[:3]]
-                key = get_key({'identifier': identifier}, 'identifier')
-                if key:
-                    if key not in data:
-                        data[key] = []
-                    data[key].append(password)
+    with open(file_path, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file, delimiter=delimiter)
+        headers = next(reader, None)
+        if headers:
+            name_col = get_name_column(headers)
+            for row_num, row in enumerate(reader, 2):  # Start from 2 as 1 is header
+                if len(row) > name_col:
+                    key = get_key(row, name_col)
+                    if key:
+                        values = [value.strip() for i, value in enumerate(row) if i != name_col and value.strip()]
+                        if values:
+                            if key not in data:
+                                data[key] = []
+                            data[key].extend(values)
+                    else:
+                        print(f"Skipped: Invalid identifier (Row {row_num})")
                 else:
-                    print(f"Skipped: Invalid identifier (Row {row_num})")
-            else:
-                print(f"Skipped: Row has less than 3 parts (Row {row_num})")
+                    print(f"Skipped: Row has insufficient columns (Row {row_num})")
+        else:
+            print("Empty file or no headers found")
     
     print(f"Finished processing. Total entries: {len(data)}")
     return data
