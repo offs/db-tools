@@ -13,16 +13,15 @@ def get_delimiter(file_path):
         return delimiter
 
 def get_key(row, name_col):
-    key = row[name_col]
-    if '@' in key:
-        return key  # email
-    elif ' ' in key:
-        return key  # full name
+    email = next((value.strip() for value in row if '@' in value), None)
+    if email:
+        return email
     else:
-        return key  # user or anything else that can be used as a key
+        values = [value.strip() for i, value in enumerate(row) if i >= name_col and value.strip() and not any(char.isdigit() for char in value)]
+        return ' '.join(values[:2])
     
 def get_name_column(headers):
-    name_keywords = ['name', 'username', 'email']
+    name_keywords = ['name', 'username', 'email', 'full name']
     for i, header in enumerate(headers):
         if any(keyword in header.lower() for keyword in name_keywords):
             return i
