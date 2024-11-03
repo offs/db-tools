@@ -14,30 +14,31 @@ def get_delimiter(file_path):
         return delimiter
 
 def get_key(row, name_col):
-    email = next((value.strip() for value in row if '@' in value), None)
+    email = next((value.strip() for value in row if isinstance(value, str) and '@' in value), None)
     if email:
         return email
     else:
-        values = [value.strip() for i, value in enumerate(row) if i >= name_col and value.strip() and not any(char.isdigit() for char in value)]
+        values = [value for i, value in enumerate(row) if i >= name_col and isinstance(value, str) and value.strip() and not any(char.isdigit() for char in value)]
         return ' '.join(values[:2])
     
 def get_name_column(headers):
     name_keywords = ['name', 'username', 'email', 'full name', 'user']
     first_name_index = last_name_index = -1
-    
+
     for i, header in enumerate(headers):
-        header_lower = header.lower()
-        if any(keyword in header_lower for keyword in name_keywords):
-            return i
-        if 'first' in header_lower and 'name' in header_lower:
-            first_name_index = i
-        if 'last' in header_lower and 'name' in header_lower:
-            last_name_index = i
-    
+        if header is not None:
+            header_lower = header.lower()
+            if any(keyword in header_lower for keyword in name_keywords):
+                return i
+            if 'first' in header_lower and 'name' in header_lower:
+                first_name_index = i
+            if 'last' in header_lower and 'name' in header_lower:
+                last_name_index = i
+
     if first_name_index != -1 and last_name_index != -1:
         return (first_name_index, last_name_index)
     
-    return 0  # Default to first column if no match found
+    return 0
 
 def read_csv(file_path):
     data = {}
