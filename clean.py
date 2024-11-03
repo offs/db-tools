@@ -56,7 +56,9 @@ def read_csv(file_path):
                     if key:
                         values = [row[name_col].strip()] + [value.strip() for i, value in enumerate(row) if i != name_col and value.strip() and value != key]
                         if values:
-                            data[key] = values
+                            if key not in data:
+                                data[key] = []
+                            data[key] = list(dict.fromkeys(data[key] + values))
                     else:
                         print(f"Skipped: Invalid identifier (Row {row_num})")
                 else:
@@ -70,7 +72,7 @@ def read_csv(file_path):
                     if values:
                         if key not in data:
                             data[key] = []
-                        data[key].extend(values)
+                        data[key] = list(dict.fromkeys(data[key] + values))
                 else:
                     print(f"Skipped: Invalid identifier (Row {row_num})")
     
@@ -82,32 +84,63 @@ def read_sql(file_path):
     data = {}
     conn = sqlite3.connect(file_path)
     cursor = conn.cursor()
+    
+    # Get the table name
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     table_name = cursor.fetchone()[0]
+    
+    # Read the table headers and get the name column
     cursor.execute(f"SELECT * FROM {table_name}")
     headers = [description[0] for description in cursor.description]
     name_col = get_name_column(headers)
-    for row in cursor.fetchall():
+    
+    print(f"Headers: {headers}")
+    
+    for row_num, row in enumerate(cursor.fetchall(), 1):
         if any(row):
-            key = get_key(row, name_col)
-            values = [str(value).strip() for i, value in enumerate(row) if i != name_col and str(value).strip()]
-            if values:  # Only add if there are non-empty values
-                data[key] = values
+            if len(row) > name_col:
+                key = get_key(row, name_col)
+                if key:
+                    # Remove duplicates and blank values, excluding the key itself
+                    values = [str(row[name_col]).strip()] + [str(value).strip() for i, value in enumerate(row) if i != name_col and str(value).strip() and str(value) != key]
+                    if values:
+                        if key not in data:
+                            data[key] = []
+                        # Combine and remove duplicates while preserving order
+                        data[key] = list(dict.fromkeys(data[key] + values))
+                else:
+                    print(f"Skipped: Invalid identifier (Row {row_num})")
+            else:
+                print(f"Skipped: Row has insufficient columns (Row {row_num})")
+    
     conn.close()
-    print (f"Finished processing. Total entries: {len(data)}")
+    print(f"Finished processing. Total entries: {len(data)}")
     return data
 
 def read_txt(file_path):
     data = {}
     delimiter = get_delimiter(file_path)  # Detect delimiter for txt file
+    
     with open(file_path, 'r', encoding='utf-8') as txtfile:
-        for line in txtfile:
+        for line_num, line in enumerate(txtfile, 1):
             parts = line.strip().split(delimiter)  # Split line using detected delimiter
-            key = get_key(parts, 0)
-            values = [value.strip() for value in parts[1:] if value.strip()]
-            if values:  # Only add if there are non-empty values
-                data[key] = values
-    print (f"Finished processing. Total entries: {len(data)}")
+            if parts:
+                key = get_key(parts, 0)
+                
+                if key:
+                    # Remove duplicates and blanks, excluding the key itself
+                    values = [parts[0].strip()] + [value.strip() for value in parts[1:] if value.strip() and value != key]
+                    if values:
+                        if key not in data:
+                            data[key] = []
+                        # Combine and remove duplicates while preserving order
+                        data[key] = list(dict.fromkeys(data[key] + values))
+                else:
+                    print(f"Skipped: Invalid identifier (Line {line_num})")
+            else:
+                print(f"Skipped: Empty line (Line {line_num})")
+                
+    print(f"Finished processing. Total entries: {len(data)}")
     return data
 
 def read_xlsx(file_path):
