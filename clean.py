@@ -35,9 +35,11 @@ def read_csv(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=delimiter)
         headers = next(reader, None)
+        
         if headers:
             name_col = get_name_column(headers)
-            for row_num, row in enumerate(reader, 2):  # Start from 2 as 1 is header
+            print(f"Headers: {headers}")
+            for row_num, row in enumerate(reader, 2):
                 if len(row) > name_col:
                     key = get_key(row, name_col)
                     if key:
@@ -51,10 +53,21 @@ def read_csv(file_path):
                 else:
                     print(f"Skipped: Row has insufficient columns (Row {row_num})")
         else:
-            print("Empty file or no headers found")
+            file.seek(0)
+            for row_num, row in enumerate(reader, 1):
+                key = get_key(row, 0)
+                if key:
+                    values = [value.strip() for value in row if value.strip()]
+                    if values:
+                        if key not in data:
+                            data[key] = []
+                        data[key].extend(values)
+                else:
+                    print(f"Skipped: Invalid identifier (Row {row_num})")
     
     print(f"Finished processing. Total entries: {len(data)}")
     return data
+
 
 def read_sql(file_path):
     data = {}
