@@ -22,7 +22,7 @@ def get_key(row, name_col):
         return ' '.join(values[:2])
     
 def get_name_column(headers):
-    name_keywords = ['name', 'username', 'email', 'full name']
+    name_keywords = ['name', 'username', 'email', 'full name', 'user']
     first_name_index = last_name_index = -1
     
     for i, header in enumerate(headers):
