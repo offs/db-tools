@@ -23,11 +23,21 @@ def get_key(row, name_col):
     
 def get_name_column(headers):
     name_keywords = ['name', 'username', 'email', 'full name']
+    first_name_index = last_name_index = -1
+    
     for i, header in enumerate(headers):
-        if any(keyword in header.lower() for keyword in name_keywords):
+        header_lower = header.lower()
+        if any(keyword in header_lower for keyword in name_keywords):
             return i
+        if 'first' in header_lower and 'name' in header_lower:
+            first_name_index = i
+        if 'last' in header_lower and 'name' in header_lower:
+            last_name_index = i
+    
+    if first_name_index != -1 and last_name_index != -1:
+        return (first_name_index, last_name_index)
+    
     return 0  # Default to first column if no match found
-
 
 def read_csv(file_path):
     data = {}
