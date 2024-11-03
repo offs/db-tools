@@ -44,11 +44,9 @@ def read_csv(file_path):
                 if len(row) > name_col:
                     key = get_key(row, name_col)
                     if key:
-                        values = [value.strip() for i, value in enumerate(row) if i != name_col and value.strip()]
+                        values = [row[name_col].strip()] + [value.strip() for i, value in enumerate(row) if i != name_col and value.strip() and value != key]
                         if values:
-                            if key not in data:
-                                data[key] = []
-                            data[key].extend(values)
+                            data[key] = values
                     else:
                         print(f"Skipped: Invalid identifier (Row {row_num})")
                 else:
