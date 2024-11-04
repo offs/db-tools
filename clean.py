@@ -2,6 +2,7 @@ import csv
 import json
 import sqlite3
 import os
+import re
 from openpyxl import load_workbook
 
 def get_delimiter(file_path):
@@ -174,6 +175,14 @@ def read_xlsx(file_path):
     print(f"Finished processing. Total entries: {len(data)}")
     return data
 
+def sanitize_data(data):
+    sanitized_data = {}
+    for key, values in data.items():
+        sanitized_key = re.sub(r'[^a-zA-Z0-9\s\@\.\-\_]', '', key.strip())
+        sanitized_values = [re.sub(r'[^a-zA-Z0-9\s\@\.\-\_]', '', value.strip()) for value in values]
+        sanitized_data[sanitized_key] = sanitized_values
+    return sanitized_data
+
 def write_json(data, output_file):
     with open(output_file, 'w') as jsonfile:
         json.dump(data, jsonfile, indent=2)
@@ -196,6 +205,7 @@ def main():
         print("Unsupported file type")
         return
     
+    data = sanitize_data(data)
     write_json(data, output_file)
     print(f"Data has been written to {output_file}")
 
