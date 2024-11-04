@@ -2,7 +2,7 @@ import csv
 import json
 import sqlite3
 import os
-from openpyxl import load_workbook
+from openpyxl import load_workbook # TODO: Move to different library
 
 def get_delimiter(file_path):
     with open(file_path, 'r') as file:
@@ -21,7 +21,7 @@ def get_key(row, name_col):
         values = [value for i, value in enumerate(row) if i >= name_col and isinstance(value, str) and value.strip() and not any(char.isdigit() for char in value)]
         return ' '.join(values[:2])
     
-def get_name_column(headers):
+def get_name_column(headers): # TODO: Improve this. edge case where keyword could be FNAME and LNAME or other variations
     name_keywords = ['name', 'username', 'email', 'full name', 'user']
     first_name_index = last_name_index = -1
 
@@ -81,7 +81,7 @@ def read_csv(file_path):
     return data
 
 
-def read_sql(file_path):
+def read_sql(file_path): # TODO: Improve sql reading
     data = {}
     conn = sqlite3.connect(file_path)
     cursor = conn.cursor()
